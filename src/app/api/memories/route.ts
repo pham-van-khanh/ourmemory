@@ -1,0 +1,5 @@
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+
+export async function GET(){ return NextResponse.json(await prisma.memory.findMany({include:{template:true}})); }
+export async function POST(req:Request){ const body=await req.json(); return NextResponse.json(await prisma.memory.create({data:body})); }

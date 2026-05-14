@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Visibility {
+  PUBLIC
+  UNLISTED
+  PASSWORD
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String?
+  accounts      Account[]
+  sessions      Session[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model TemplateDefinition {
+  id            String   @id @default(cuid())
+  code          String   @unique
+  name          String
+  category      String
+  thumbnail     String
+  premium       Boolean  @default(false)
+  isActive      Boolean  @default(true)
+  version       Int      @default(1)
+  schema        Json
+  defaults      Json
+  styleTokens   Json
+  allowedBlocks Json
+  sortOrder     Int      @default(0)
+  publishedAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  memories      Memory[]
+}
+
+model Memory {
+  id             String   @id @default(cuid())
+  slug           String   @unique
+  title          String
+  date           DateTime
+  location       String?
+  quote          String?
+  storyBlocks    Json
+  gallery        Json
+  musicUrl       String?
+  videoEmbedUrl  String?
+  visibility     Visibility @default(PUBLIC)
+  passwordHash   String?
+  templateId     String
+  template       TemplateDefinition @relation(fields: [templateId], references: [id])
+  customSettings Json
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
